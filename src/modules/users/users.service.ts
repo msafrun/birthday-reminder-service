@@ -3,14 +3,18 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { CreateUserDTO, UpdateUserDTO } from './dto/user.dto';
+import moment from 'moment-timezone';
+import { sendBirthdayEmail } from './utils/user.util';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: CreateUserDTO) {
@@ -36,10 +40,6 @@ export class UsersService {
     }
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
-
   async findOne(id: string) {
     const getUser = await this.userModel.findById(id);
     if (!getUser)
@@ -62,5 +62,31 @@ export class UsersService {
 
   async remove(id: string) {
     return await this.userModel.findByIdAndDelete(id);
+  }
+
+  async handleBirthdayMessages() {
+    try {
+      const users = await this.userModel.find().exec();
+      const now = moment.utc();
+
+      for (const user of users) {
+        const userLocalTime = now.clone().tz(user.timezone);
+        if (userLocalTime.hour() === 9 && userLocalTime.minute() === 0) {
+          const today = userLocalTime.format('MM-DD');
+          const birthday = moment(user.birthday)
+            .tz(user.timezone)
+            .format('MM-DD');
+
+          if (today === birthday) {
+            const sent = await sendBirthdayEmail(user);
+            this.logger.log(
+              `Birthday message sent to ${user.email}, status: ${sent ? 'sent' : 'failed'}`,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Birthday check failed: ${error.message}`);
+    }
   }
 }
