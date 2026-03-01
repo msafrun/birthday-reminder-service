@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './schemas/user.schema';
+import moment from 'moment-timezone';
+import { sendBirthdayEmail } from './utils/user.util';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -185,5 +187,117 @@ describe('UsersService', () => {
       const result = await service.remove('nonexistent-id');
       expect(result).toBeNull();
     });
+  });
+});
+
+jest.mock('./utils/user.util', () => ({
+  sendBirthdayEmail: jest.fn(),
+}));
+
+describe('UserService - handleBirthdayMessages (Worker)', () => {
+  let service: UsersService;
+  let userModel: Model<any>;
+
+  const mockUserModel = {
+    find: jest.fn(),
+  };
+
+  const mockUsers = [
+    {
+      email: 'test@example.com',
+      timezone: 'Asia/Jakarta',
+      birthday: '1995-03-01',
+    },
+  ];
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: getModelToken('User'),
+          useValue: mockUserModel,
+        },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+    userModel = module.get<Model<any>>(getModelToken('User'));
+
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should send birthday email when time is 09:00 and birthday matches', async () => {
+    mockUserModel.find.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockUsers),
+    });
+
+    const fakeNow = moment.tz('2026-03-01 02:00', 'UTC');
+
+    jest.spyOn(moment, 'utc').mockReturnValue(fakeNow);
+
+    (sendBirthdayEmail as jest.Mock).mockResolvedValue(true);
+
+    const loggerSpy = jest.spyOn(service['logger'], 'log');
+
+    await service.handleBirthdayMessages();
+
+    expect(sendBirthdayEmail).toHaveBeenCalledWith(mockUsers[0]);
+    expect(loggerSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Birthday message sent'),
+    );
+  });
+
+  it('should NOT send email if time is not 09:00', async () => {
+    mockUserModel.find.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockUsers),
+    });
+
+    const fakeNow = moment.tz('2026-03-01 01:00', 'UTC');
+
+    jest.spyOn(moment, 'utc').mockReturnValue(fakeNow);
+
+    await service.handleBirthdayMessages();
+
+    expect(sendBirthdayEmail).not.toHaveBeenCalled();
+  });
+
+  it('should NOT send email if birthday does not match', async () => {
+    const usersWithDifferentBirthday = [
+      {
+        email: 'test@example.com',
+        timezone: 'Asia/Jakarta',
+        birthday: '1995-04-01',
+      },
+    ];
+
+    mockUserModel.find.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(usersWithDifferentBirthday),
+    });
+
+    const fakeNow = moment.tz('2026-03-01 02:00', 'UTC');
+    jest.spyOn(moment, 'utc').mockReturnValue(fakeNow);
+
+    await service.handleBirthdayMessages();
+
+    expect(sendBirthdayEmail).not.toHaveBeenCalled();
+  });
+
+  it('should log error if exception occurs', async () => {
+    mockUserModel.find.mockReturnValue({
+      exec: jest.fn().mockRejectedValue(new Error('DB error')),
+    });
+
+    const errorSpy = jest.spyOn(service['logger'], 'error');
+
+    await service.handleBirthdayMessages();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Birthday check failed'),
+    );
   });
 });
