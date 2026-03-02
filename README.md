@@ -1,98 +1,317 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🎂 Birthday Reminder Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A backend service built with NestJS that:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- Manages users
+- Stores birthdays with timezone support
+- Automatically sends birthday greetings at **9:00 AM in the user's local timezone**
+- Uses MongoDB
+- Runs fully inside Docker
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+# 🏗 Tech Stack
 
-## Project setup
+- NestJS
+- MongoDB
+- Mongoose
+- @nestjs/schedule (Cron Worker)
+- SMTP (Mailtrap or any SMTP provider)
+- Docker & Docker Compose
 
-```bash
-$ npm install
+---
+
+# 🚀 Running the Application with Docker
+
+## 1️⃣ Prerequisites
+
+- Docker Desktop installed (Windows/Mac/Linux)
+- Docker Compose enabled
+
+---
+
+## 2️⃣ Create Environment File
+
+Create a file named:
+
+```
+.env
 ```
 
-## Compile and run the project
+Example:
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```env
+MONGO_URI=mongodb://mongo:27017/birthday-reminder-db
+PORT=3000
+SMTP_HOST=live.smtp.mailtrap.io
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+SMTP_FROM=info@example.com
 ```
 
-## Run tests
+---
+
+## 3️⃣ Build and Run
+
+From the project root:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 4️⃣ Access the API
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+```
+http://localhost:3000
+```
+
+---
+
+## 5️⃣ Stop Containers
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose down
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+To reset the database:
 
-## Resources
+```bash
+docker compose down -v
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# 👷 Worker Explanation
 
-## Support
+The worker is implemented using `@nestjs/schedule`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Runs every minute
+- Checks if today matches user's birthday (month & day)
+- Sends email at **9:00 AM in the user’s timezone**
+- Runs inside the same container as the API
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# 📬 API Documentation
 
-## License
+Base URL:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```
+http://localhost:3000
+```
+
+---
+
+# 1️⃣ Create User
+
+### Endpoint
+
+```
+POST /users
+```
+
+### Request Body
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "birthday": "1995-03-15",
+  "timezone": "America/New_York"
+}
+```
+
+### Field Requirements
+
+| Field    | Type   | Required | Description                   |
+|----------|--------|----------|--------------------------------|
+| name     | string | ✅       | User's full name             |
+| email    | string | ✅       | Must be valid & unique       |
+| birthday | string | ✅       | ISO 8601 date format         |
+| timezone | string | ✅       | Valid IANA timezone          |
+
+---
+
+# 2️⃣ Get User By ID
+
+### Endpoint
+
+```
+GET /users/:id
+```
+
+Example:
+
+```
+GET /users/65f123abc456def789012345
+```
+
+---
+
+# 3️⃣ Update User
+
+### Endpoint
+
+```
+PATCH /users/:id
+```
+
+Example Body:
+
+```json
+{
+  "name": "Updated Name",
+  "timezone": "Asia/Tokyo"
+}
+```
+
+---
+
+# 4️⃣ Delete User
+
+### Endpoint
+
+```
+DELETE /users/:id
+```
+
+---
+
+# 🧠 Assumptions
+
+1. Email uniqueness is enforced at the database level.
+2. Birthday comparison ignores the year (only month & day matter).
+3. Request validation using Data Transfer Objects (DTOs) for both user creation and update operations, ensuring data integrity before processing.
+4. Worker runs every minute.
+5. SMTP credentials are valid and reachable.
+6. Timezone must be a valid IANA timezone string.
+
+---
+
+# ⚠️ Limitations
+
+1. Worker runs in the same container (not horizontally scalable).
+2. No retry mechanism for failed emails.
+3. No authentication implemented.
+4. No distributed locking (multiple instances may duplicate send).
+5. No queue system (polling-based cron approach).
+
+---
+
+# 🏗 Design Decisions
+
+## Why NestJS?
+
+- Modular architecture
+- Dependency injection
+- Scalable structure
+- Built-in scheduling support
+
+## Why MongoDB?
+
+- Flexible document schema
+- Easy user data modeling
+- Fast development setup
+
+## Why Cron-Based Worker Instead of Queue?
+
+- Simpler architecture
+- Suitable for small-scale scheduling
+- Reduces operational complexity
+
+## Why Timezone-Based Scheduling?
+
+Users receive birthday greetings at **9:00 AM in their own timezone**, not server time.
+
+Timezone conversion handled using `moment-timezone`.
+
+---
+
+# 🐳 Docker Design
+
+- Multi-stage Docker build
+- MongoDB runs as separate service
+- Environment-based configuration
+- Persistent Mongo volume
+
+---
+
+# 🧪 Running Tests
+
+Run locally:
+
+```bash
+npm install
+npm run test
+```
+
+
+Unit tests cover:
+
+✅ User CRUD operations with comprehensive error handling
+  - Create: validation errors, duplicate emails, database errors
+  - Read: successful fetch, user not found
+  - Update: successful update, user not found
+  - Delete: successful deletion, user not found
+
+✅ Birthday worker scheduling logic
+  - Email sent at correct time (09:00 user local time)
+  - No email sent outside 09:00 window
+  - No email sent on non-birthday dates
+
+✅ Error handling and logging scenarios
+  - Database failures during birthday checks
+  - Logging for both successful operations and errors
+
+---
+
+# 📦 Project Structure
+
+```
+└── 📁birthday-reminder-service
+    └── 📁src
+        └── 📁common
+        └── 📁modules
+            └── 📁schedulars
+            └── 📁users
+        ├── app.controller.spec.ts
+        ├── app.controller.ts
+        ├── app.module.ts
+        ├── app.service.ts
+        ├── main.ts
+    └── 📁test
+```
+
+---
+
+# 🔮 Future Improvements
+
+- Separate worker container
+- Add queue
+- Add authentication (JWT)
+- Add retry mechanism
+- Add healthcheck endpoint
+- Add structured logging
+
+
+---
+
+# 🎯 Architecture Overview
+
+```
+Client
+   ↓
+NestJS API
+   ↓
+MongoDB
+   ↓
+Scheduler (Cron)
+   ↓
+SMTP Server
+```
+
+---
