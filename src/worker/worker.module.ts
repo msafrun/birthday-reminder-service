@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { BirthdayWorkerService } from './services/birthday-worker.service';
 import { User, UserSchema } from '../shared/schemas/user.schema';
+import { BirthdayWorkerService } from './services/birthday-worker.service';
 
 @Module({
   imports: [
@@ -18,6 +18,6 @@ import { User, UserSchema } from '../shared/schemas/user.schema';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  //   providers: [BirthdayWorkerService],
+  providers: [BirthdayWorkerService],
 })
 export class WorkerModule {}
