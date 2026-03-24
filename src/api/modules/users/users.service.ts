@@ -3,11 +3,12 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDTO, UpdateUserDTO } from './dto/user.dto';
-import { User } from 'src/shared/schemas/user.schema';
+import { User } from '../../../shared/schemas/user.schema';
 
 @Injectable()
 export class UsersService {
@@ -52,8 +53,7 @@ export class UsersService {
         { returnDocument: 'after', runValidators: true },
       );
 
-      if (!updatedUser)
-        throw new HttpException('User not found!', HttpStatus.NOT_FOUND);
+      if (!updatedUser) throw new NotFoundException();
 
       return updatedUser;
     } catch (error) {
@@ -62,6 +62,10 @@ export class UsersService {
           error?.errorResponse?.errmsg,
           HttpStatus.BAD_REQUEST,
         );
+      }
+
+      if (error?.status === HttpStatus.NOT_FOUND) {
+        throw new HttpException('User not found!', HttpStatus.NOT_FOUND);
       }
 
       throw new InternalServerErrorException();

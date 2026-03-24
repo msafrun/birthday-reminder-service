@@ -17,7 +17,7 @@ import {
   type CreateUserDTO,
   type UpdateUserDTO,
 } from './dto/user.dto';
-import { ZodValidationPipe } from 'src/api/common/pipes/zod.pipe';
+import { ZodValidationPipe } from '../../common/pipes/zod.pipe';
 
 @Controller('users')
 export class UsersController {

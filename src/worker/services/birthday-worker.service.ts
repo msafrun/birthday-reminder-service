@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
-import { User } from 'src/shared/schemas/user.schema';
+import { User } from '../../shared/schemas/user.schema';
 import moment from 'moment-timezone';
 import { sendBirthdayEmail } from '../utils/birthday-worker.util';
 
@@ -11,7 +11,7 @@ export class BirthdayWorkerService {
   private readonly logger = new Logger(BirthdayWorkerService.name);
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_MINUTE)
   async checkAndSendBirthdayMessages() {
     try {
       const users = await this.userModel.find().exec();
