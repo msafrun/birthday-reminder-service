@@ -11,7 +11,7 @@ export class BirthdayWorkerService {
   private readonly logger = new Logger(BirthdayWorkerService.name);
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_HOUR)
   async checkAndSendBirthdayMessages() {
     try {
       const users = await this.userModel.find().exec();
