@@ -1,34 +1,53 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UsePipes,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  createUserSchema,
+  updateUserSchema,
+  type CreateUserDTO,
+  type UpdateUserDTO,
+} from './dto/user.dto';
+import { ZodValidationPipe } from 'src/api/common/pipes/zod.pipe';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ZodValidationPipe(createUserSchema))
+  async create(@Body() createUserDto: CreateUserDTO) {
+    return await this.usersService.create(createUserDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('id') id: string) {
+    return await this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateUserSchema)) updateUserDto: UpdateUserDTO,
+  ) {
+    return await this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string) {
+    return await this.usersService.remove(id);
   }
 }

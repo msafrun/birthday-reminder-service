@@ -1,26 +1,74 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CreateUserDTO, UpdateUserDTO } from './dto/user.dto';
+import { User } from 'src/shared/schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async create(createUserDto: CreateUserDTO) {
+    try {
+      const createdUser = new this.userModel(createUserDto);
+      return await createdUser.save();
+    } catch (error) {
+      if (error?.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(
+          (err: any) => err.message,
+        );
+        throw new HttpException(messages.join(', '), HttpStatus.BAD_REQUEST);
+      }
+
+      if (error?.code === 11000) {
+        throw new HttpException(
+          error?.errorResponse?.errmsg,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      throw new InternalServerErrorException();
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findOne(id: string) {
+    const getUser = await this.userModel.findById(id);
+    if (!getUser)
+      throw new HttpException('User not found!', HttpStatus.NOT_FOUND);
+
+    return getUser;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDTO) {
+    try {
+      const updatedUser = await this.userModel.findByIdAndUpdate(
+        id,
+        updateUserDto,
+        { returnDocument: 'after', runValidators: true },
+      );
+
+      if (!updatedUser)
+        throw new HttpException('User not found!', HttpStatus.NOT_FOUND);
+
+      return updatedUser;
+    } catch (error) {
+      if (error?.code === 11000) {
+        throw new HttpException(
+          error?.errorResponse?.errmsg,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      throw new InternalServerErrorException();
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    return await this.userModel.findByIdAndDelete(id);
   }
 }
